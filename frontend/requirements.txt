@@ -1,0 +1,2 @@
+# Frontend dependencies (tested on Streamlit 1.65 and 1.67)
+streamlit>=1.65
