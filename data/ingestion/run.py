@@ -13,9 +13,9 @@ def main():
     ap.add_argument("--force", action="store_true", help="re-write records that already exist")
     args = ap.parse_args()
 
-    scope = list_pokemon_scope(args.max_dex)
-    if args.limit:
-        scope = scope[: args.limit]
+    full_scope = list_pokemon_scope(args.max_dex)
+    name_to_dex = {e["name"]: e["dex"] for e in full_scope}
+    scope = full_scope[: args.limit] if args.limit else full_scope
     print(f"{len(scope)} Pokémon in scope")
 
     failures = 0
@@ -25,7 +25,7 @@ def main():
             continue
         try:
             html, wikitext = fetch_page(entry["title"])
-            path = write_record(entry, build_record(entry, html, wikitext))
+            path = write_record(entry, build_record(entry, html, wikitext, name_to_dex))
             print(f"[{i}/{len(scope)}] wrote {path.name}")
         except Exception as exc:  # keep going; log and retry later
             failures += 1
