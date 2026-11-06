@@ -1,6 +1,6 @@
 from pathlib import Path
 
-BASE_URL = "https://bulbapedia.bulbagarden.net/w/api/php"
+BASE_URL = "https://bulbapedia.bulbagarden.net/w/api.php"
 LIST_PAGE = "List of Pokémon by National Pokédex number"
 
 USER_AGENT = "GottaCatchEmAll-Project4/0.1"

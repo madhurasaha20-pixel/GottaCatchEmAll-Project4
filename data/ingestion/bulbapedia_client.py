@@ -59,7 +59,7 @@ def list_pokemon_scope(max_dex: int) -> list[dict]:
         dex = int(m.group(1))
         if dex > max_dex or dex in found:
             continue
-        link = row.find("a", title=re.compile(r"\(pokemon\)$"))
+        link = row.find("a", title=re.compile(r"\(Pokémon\)$"))
         if link:
             found[dex] = {"dex": dex, "name": link.get_text(strip=True), "title": link["title"]}
     return [found[d] for d in sorted(found)]
