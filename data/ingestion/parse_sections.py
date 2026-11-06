@@ -35,6 +35,7 @@ def parse_sections(html: str, page_name: str) -> list[dict]:
     stack: list[tuple[int, str]] = []
     current = {"heading": page_name, "level": 1, "path": [page_name], "parts": []}
     skipping = False
+    skip_level = None
 
     def flush():
         text = "\n".join(p for p in current["parts"] if p).strip()
@@ -48,7 +49,13 @@ def parse_sections(html: str, page_name: str) -> list[dict]:
             flush()
             level, title = head
             stack[:] = [(l, t) for l, t in stack if l < level] + [(level, title)]
-            skipping = title.lower() in config.SKIP_SECTIONS
+
+            if skip_level is not None and level <= skip_level:
+                skip_level = None
+            if skip_level is None and title.lower() in config.SKIP_SECTIONS:
+                skip_level = level
+            skipping = skip_level is not None
+            
             current = {"heading": title, "level": level,
                        "path": [t for _, t in stack], "parts": []}
         elif el.name in ("p", "ul", "ol", "dl"):

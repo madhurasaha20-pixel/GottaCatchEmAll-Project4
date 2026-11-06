@@ -25,12 +25,18 @@ GEN_END = [
 ]
 
 SKIP_SECTIONS = {
-    "see also",
-    "external links",
-    "references",
-    "notes",
-    "sprites",
+    "see also", 
+    "external links", 
+    "references", 
+    "notes", 
+    "sprites", 
     "gallery",
-    "in other languages",
-    "related articles"
+    "in other languages", 
+    "related articles",
+    "in animation", 
+    "in the manga", 
+    "in the tcg", 
+    "in the tfg",
+    "other appearances", 
+    "merchandise",
 }
