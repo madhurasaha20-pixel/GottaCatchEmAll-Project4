@@ -29,21 +29,24 @@ with fd.device():
     fault = bool(ss.turns and ss.turns[-1]["answer"]["kind"] == "fault")
     fd.render_cap("scanning" if busy else "fault" if fault else "ready")
     fd.render_hinge()
-    if ss.turns or busy:
-        with fd.screen():
-            fd.render_screenbar("DEX SEARCH", f"{len(ss.turns)} READOUTS")
-            if busy:
-                fd.render_query(ss.pending_question)
-                fd.render_receiving()
-            for index in range(len(ss.turns) - 1, -1, -1):
-                old = busy or index != len(ss.turns) - 1
-                if index == len(ss.turns) - 2:
-                    fd.render_earlier()
-                turn = ss.turns[index]
-                fd.render_query(turn["question"], old=old)
-                fd.render_answer(key=str(index), old=old, **turn["answer"])
-    else:
-        fd.render_hint("Ask about Pokémon using the records loaded into the Dex.")
+    with fd.screen():
+        fd.render_screenbar("DEX SEARCH", f"{len(ss.turns)} READOUTS")
+        for index, turn in enumerate(ss.turns):
+            latest = index == len(ss.turns) - 1 and not busy
+            fd.render_query(turn["question"], old=not latest)
+            if not latest:  # the newest answer is spoken by the mascot
+                fd.render_answer(key=str(index), old=True, **turn["answer"])
+        if busy:
+            fd.render_query(ss.pending_question)
+        with fd.stage():
+            with fd.bubble():
+                if busy:
+                    fd.render_receiving("THINKING")
+                elif ss.turns:
+                    fd.render_answer(key="latest", **ss.turns[-1]["answer"])
+                else:
+                    fd.render_bubble_text("Ask me about Pokémon using the records loaded into the Dex.")
+            fd.render_mascot("scanning" if busy else "fault" if fault else "ready")
 
     with fd.slot(busy=busy):
         with st.form("fd-ask", clear_on_submit=True, border=False):

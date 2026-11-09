@@ -89,7 +89,6 @@
   padding-top: 56px;
   padding-bottom: 48px;
 }
-
 @keyframes fd-drift {
   from { background-position: 0 0, 0 0; }
   to   { background-position: 0 0, 800px 0; }
@@ -708,6 +707,81 @@
 }
 .st-key-fd-screen [data-testid="stFileUploaderDropzone"]:hover { border-color: var(--fd-signal); }
 
+/* ---------- 9b. Mascot stage inside the screen (containers keyed fd-stage / fd-bubble) ---------- */
+/* pinned to the bottom-right of the scrolling screen; the bubble speaks the latest response */
+.st-key-fd-stage {
+  position: sticky;
+  bottom: -20px;
+  z-index: 2;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 18px;
+  margin: 6px -20px -20px;
+  padding: 18px 0 8px 20px;
+}
+.st-key-fd-screen .st-key-fd-stage { width: calc(100% + 40px); max-width: none; }
+/* Streamlit wraps each child: the bubble in a layout wrapper, the mascot in an element container */
+.st-key-fd-stage > [data-testid="stLayoutWrapper"] { flex: 1 1 auto; min-width: 0; width: auto; align-self: flex-end; }
+.st-key-fd-stage > [data-testid="stElementContainer"] { flex: none; width: 118px; }
+.st-key-fd-stage .st-key-fd-bubble {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  margin-bottom: 36px;
+  padding: 12px 14px;
+  gap: 8px;
+  color: var(--fd-ink);
+  background: #0C2F4F;
+  border: 1px solid rgba(140, 220, 255, 0.42);
+  border-radius: 14px;
+  box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  max-height: min(34vh, 260px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 220, 255, 0.35) transparent;
+  animation: fd-pop var(--fd-med) var(--fd-ease) both;
+}
+.st-key-fd-bubble p, .st-key-fd-bubble li { color: var(--fd-ink); font-size: 14px; line-height: 1.55; }
+.st-key-fd-bubble a { color: #8BE6F5; text-decoration: none; border-bottom: 1px solid rgba(139, 230, 245, 0.35); }
+.st-key-fd-bubble code { padding: 1px 6px; border-radius: 4px; background: rgba(140, 220, 255, 0.1); font-size: 0.88em; }
+/* the answer panel inside the bubble drops its own frame */
+.st-key-fd-bubble [class*="st-key-fd-ans-"] { background: transparent; border: 0; padding: 0; animation: none; }
+.st-key-fd-bubble [data-testid="stMarkdownContainer"] { margin-bottom: 0; }
+.st-key-fd-bubble [data-testid="stMarkdownContainer"] p { margin-bottom: 0; }
+.fd-bubble__text { font-size: 14px; line-height: 1.55; color: var(--fd-ink); }
+.st-key-fd-bubble .fd-receiving { height: 34px; background: transparent; border: 0; padding: 0; }
+
+/* tail pointing right at the mascot, drawn on the stage so the bubble can scroll without clipping it */
+.st-key-fd-stage::after {
+  content: "";
+  position: absolute;
+  right: 129px;
+  bottom: 78px;
+  width: 14px;
+  height: 14px;
+  background: #0C2F4F;
+  border-top: 1px solid rgba(140, 220, 255, 0.42);
+  border-right: 1px solid rgba(140, 220, 255, 0.42);
+  transform: rotate(45deg);
+}
+
+.fd-mascot { flex: none; width: 118px; line-height: 0; }
+.fd-mascot img {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.45));
+}
+
+@keyframes fd-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* ---------- 10. Footer ---------- */
 .fd-foot {
   margin-top: 20px;
@@ -730,6 +804,12 @@
   .fd-lens__glint { top: 11px; left: 12px; width: 9px; height: 5px; }
   .fd-plate__word { font-size: 18px; }
   .st-key-fd-screen { padding: 14px 14px 16px; }
+  .st-key-fd-stage { margin: 6px -14px -16px; padding: 18px 0 6px 14px; gap: 14px; bottom: -16px; }
+  .st-key-fd-screen .st-key-fd-stage { width: calc(100% + 28px); }
+  .fd-mascot { width: 84px; }
+  .st-key-fd-stage::after { right: 96px; bottom: 60px; }
+  .st-key-fd-stage > [data-testid="stElementContainer"] { width: 84px; }
+  .st-key-fd-bubble { margin-bottom: 26px; }
   .fd-entry__name { font-size: 22px; }
   [class*="st-key-fd-slot"] [data-testid="stColumn"]:last-child { flex-basis: 88px; width: 88px; min-width: 88px; }
 }
@@ -746,5 +826,6 @@
   .fd-cap .fd-lens__glass,
   .fd-cap .fd-lens__iris,
   .fd-cap .fd-status__led,
+  .st-key-fd-bubble,
   .st-key-fd-slot-busy [data-testid="stTextInputRootElement"]::after { animation: none !important; }
 }

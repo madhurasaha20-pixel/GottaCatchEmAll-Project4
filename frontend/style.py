@@ -76,6 +76,26 @@ def slot(busy: bool = False):
     return st.container(key="fd-slot-busy" if busy else "fd-slot")
 
 
+def stage():
+    """Bottom strip of the screen: the speech bubble on the left, the mascot on the right. Sticks to the screen's bottom edge."""
+    return st.container(key="fd-stage")
+
+
+def bubble():
+    """The speech bubble beside the mascot. Put the latest response (or a greeting) inside it."""
+    return st.container(key="fd-bubble")
+
+
+def render_mascot(status: Status = "ready") -> None:
+    """The lab-coat Psyduck. data-state drives the idle bob (ready) and the fidget (scanning)."""
+    st.html(f'<div class="fd-mascot" data-state="{status}" aria-hidden="true">'
+            '<img src="app/static/mascot.png" alt="" draggable="false"></div>')
+
+
+def render_bubble_text(text: str) -> None:
+    st.html(f'<div class="fd-bubble__text">{escape(text)}</div>')
+
+
 # ---------- hardware ----------
 
 def render_cap(status: Status = "ready", serial: str = "GCEA · UNIT 05") -> None:
