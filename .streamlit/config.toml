@@ -1,0 +1,64 @@
+# Field Dex theme. Read by Streamlit when you run the app from the repo root:
+#   streamlit run frontend/app.py
+# Colors and fonts are documented in docs/style-guide.md. Change them there first.
+
+[server]
+# serves frontend/static/ (fonts, favicon) at app/static/
+enableStaticServing = true
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "dark"
+primaryColor = "#57D9F0"            # signal cyan: focus rings, active states
+backgroundColor = "#0E4E6C"         # fallback behind the zigzag field
+secondaryBackgroundColor = "#1B1E25" # graphite: input slots and widget fills
+textColor = "#EEF4F8"
+linkColor = "#8BE6F5"
+borderColor = "#2B2F38"
+showWidgetBorder = false
+baseRadius = "10px"
+buttonRadius = "10px"
+font = "IBM Plex Sans, system-ui, sans-serif"
+headingFont = "Chakra Petch, IBM Plex Sans, sans-serif"
+codeFont = "monospace"
+
+[[theme.fontFaces]]
+family = "IBM Plex Sans"
+url = "app/static/fonts/ibm-plex-sans-latin-400-normal.woff2"
+weight = 400
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Sans"
+url = "app/static/fonts/ibm-plex-sans-latin-500-normal.woff2"
+weight = 500
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Sans"
+url = "app/static/fonts/ibm-plex-sans-latin-600-normal.woff2"
+weight = 600
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Chakra Petch"
+url = "app/static/fonts/chakra-petch-latin-500-normal.woff2"
+weight = 500
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Chakra Petch"
+url = "app/static/fonts/chakra-petch-latin-600-normal.woff2"
+weight = 600
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Chakra Petch"
+url = "app/static/fonts/chakra-petch-latin-700-normal.woff2"
+weight = 700
+style = "normal"
+
+[browser]
+gatherUsageStats = false
