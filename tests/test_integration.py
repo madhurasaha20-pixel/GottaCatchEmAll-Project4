@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from backend.main import app
 from backend import memory
 
-pytestmark=pytest.mark.skipif(os.getenv('RUN_OLLAMA_TESTS')!='1',reason='Requires a running Ollama model and RUN_OLLAMA_TESTS=1')
 
 def test_live_ask_returns_answer_and_session():
     response=TestClient(app).post('/ask',json={'question':'What type is Pikachu?'})

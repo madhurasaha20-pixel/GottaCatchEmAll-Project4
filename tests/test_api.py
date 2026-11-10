@@ -1,4 +1,4 @@
-gitimport pytest
+import pytest
 pytest.importorskip("ollama")
 from fastapi.testclient import TestClient
 from backend.main import app
