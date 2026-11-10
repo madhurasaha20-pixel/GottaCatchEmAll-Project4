@@ -1,6 +1,6 @@
 import uuid
 
-from . import memory
+from . import memory, llm
 from .schemas import AskResponse
 
 
@@ -9,7 +9,7 @@ def answer(session_id: str | None, question: str, top_k: int) -> AskResponse:
 
   history = memory.get(session_id)
 
-  text = f"(stub) You asked: {question}. I remember {len(history)} earlier messages."
+  text = llm.generate(history, question)
 
   memory.append(session_id, "user", question)
   memory.append(session_id, "assistant", text)
