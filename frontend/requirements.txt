@@ -1,2 +1,8 @@
 # Frontend dependencies (tested on Streamlit 1.65 and 1.67)
 streamlit>=1.65
+requests
+beautifulsoup4
+mwparserfromhell
+sentence-transformers
+chromadb
+langchain-text-splitters

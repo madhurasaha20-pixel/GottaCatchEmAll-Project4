@@ -1,3 +1,9 @@
+import json
+import re
+from pathlib import Path
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+
 from pathlib import Path
 
 import chromadb
@@ -13,6 +19,79 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 
 # Vector database collection
 COLLECTION_NAME = "pokemon_documentation"
+
+#=Chunking configuration
+RAW_DIR = BASE_DIR / "data" / "raw"
+CHUNK_SIZE = 700
+CHUNK_OVERLAP = 100
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=CHUNK_SIZE,
+    chunk_overlap=CHUNK_OVERLAP,
+    separators=["\n\n", "\n", ". ", " ", ""],
+)
+
+
+def slugify(value):
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+#=Split raw text, then give every chunk a unique ID
+def chunk_text(text, source_id, pokemon, dex_number, heading, path):
+    text = text.strip()
+    if not text:
+        return []
+
+    pieces = splitter.split_text(text)
+
+    chunks = []
+    for i, piece in enumerate(pieces):
+        chunks.append({
+            "id": f"{source_id}_chunk_{i}",
+            "pokemon": pokemon,
+            "dex_number": dex_number,
+            "heading": heading,
+            "path": path,   # list, joined into a string later in store_chunks
+            # Prefix tells the embedding model where this text came from
+            "text": f"{pokemon} - {' > '.join(path)}\n{piece}",
+        })
+    return chunks
+
+
+#=Turn ONE Pokémon JSON record into chunks
+def chunk_record(record):
+    pokemon = record["name"]
+    dex = record["dex_number"]
+    base_id = f"{dex:04d}-{slugify(pokemon)}"
+    chunks = []
+
+    #=Main page sections vectorizaton.oy fi
+    for s, section in enumerate(record.get("sections", [])):
+        heading = section.get("heading", "Overview")
+        path = section.get("path") or [heading]
+        chunks += chunk_text(section.get("text", ""), f"{base_id}_s{s}",
+                             pokemon, dex, heading, path)
+
+    # Pokédex flavor text: [{"game": ..., "text": ...}]
+    for j, entry in enumerate(record.get("pokedex_entries", [])):
+        game = entry.get("game", "Unknown")
+        chunks += chunk_text(entry.get("text", ""), f"{base_id}_dex{j}",
+                             pokemon, dex, "Pokedex entries", ["Pokedex entries", game])
+
+    # Evolution summary
+    chunks += chunk_text(record.get("evolution", {}).get("text", ""), f"{base_id}_evo",
+                         pokemon, dex, "Evolution", ["Evolution"])
+
+    return chunks
+
+
+#=Read every JSON record on disk and return one flat list of chunks
+def load_chunks(raw_dir=RAW_DIR):
+    chunks = []
+    for path in sorted(Path(raw_dir).glob("*.json")):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        chunks.extend(chunk_record(record))
+    return chunks
 
 def load_embedding_model():
     model = SentenceTransformer(
@@ -71,13 +150,14 @@ def store_chunks(chunks, embeddings, collection):
 
     for index, chunk in enumerate(chunks):
         ids.append(
-            f"{chunk['pokemon'].lower()}-{index}"
+            chunk["id"]  # CHANGED: was f"{chunk['pokemon'].lower()}-{index}"
         )
 
         documents.append(chunk["text"])
 
         metadatas.append({
             "pokemon": chunk["pokemon"],
+            "dex_number": chunk["dex_number"],  # ADDED
             "heading": chunk["heading"],
             "path": " > ".join(chunk["path"])
         })
