@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from . import chat_service
+
 from .schemas import AskRequest, AskResponse
 
 app = FastAPI(title="FieldDex API")
@@ -10,9 +12,4 @@ def health():
 
 @app.post("/ask", response_model=AskResponse)
 def ask(req: AskRequest):
-    return AskResponse(
-        kind="answer",
-        text=f"(stub) You asked: {req.question}",
-        sources=[],
-        session_id=req.session_id or "stub"
-    )
+    return chat_service.answer(req.session_id, req.question, req.top_k)
