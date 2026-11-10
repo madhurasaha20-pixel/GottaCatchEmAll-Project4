@@ -157,7 +157,6 @@ def store_chunks(chunks, embeddings, collection):
 
         metadatas.append({
             "pokemon": chunk["pokemon"],
-            "dex_number": chunk["dex_number"],  # ADDED
             "heading": chunk["heading"],
             "path": " > ".join(chunk["path"])
         })
