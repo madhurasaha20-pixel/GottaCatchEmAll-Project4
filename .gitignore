@@ -222,3 +222,7 @@ __marimo__/
 # Local data
 data/cache/
 data/raw/
+
+# Local development files
+.idea/
+data/chroma/
