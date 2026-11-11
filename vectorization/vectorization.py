@@ -1,6 +1,4 @@
 from pathlib import Path
-
-from langchain_core import documents
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
 from sentence_transformers import SentenceTransformer
@@ -117,7 +115,7 @@ def store_chunks(chunks, embeddings, collection):
         metadatas=metadatas
     )
 
-def run_vectorization(chunks):
+def run_vectorization(documents):
     chunks = chunk_documents(documents)
 
     if not chunks:
