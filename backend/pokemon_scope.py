@@ -34,17 +34,22 @@ def find_pokemon(question: str):
     lookup = get_pokemon_lookup()
     normalized_question = normalize_name(question)
 
-    for name in sorted(
-        lookup,
-        key=len,
-        reverse=True
-    ):
+    matches = []
+
+    for name in sorted(lookup, key=len, reverse=True):
         pattern = rf"\b{re.escape(name)}\b"
 
         if re.search(pattern, normalized_question):
-            return {
+            matches.append({
                 "name": name,
                 "dex": lookup[name]
-            }
+            })
 
-    return None
+    # Reject if any mentioned Pokémon is outside Gen 1.
+    for pokemon in matches:
+        if pokemon["dex"] > 151:
+            return pokemon
+
+    # Otherwise, return a matching Gen 1 Pokémon.
+    return matches[0] if matches else None
+
