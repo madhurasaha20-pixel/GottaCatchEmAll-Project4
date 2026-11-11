@@ -3,3 +3,4 @@ beautifulsoup4
 mwparserfromhell
 sentence-transformers
 chromadb
+langchain-text-splitters
