@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from langchain_core import documents
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
 from sentence_transformers import SentenceTransformer
 
@@ -13,6 +15,31 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 
 # Vector database collection
 COLLECTION_NAME = "pokemon_documentation"
+
+# Chunking configuration
+def chunk_documents(documents):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=700,
+        chunk_overlap=100,
+        separators=["\n\n", "\n", " ", ""]
+    )
+
+    chunks = []
+
+    for document in documents:
+        text = document.get("text", "").strip()
+        if not text:
+            continue
+
+        for chunk_text in splitter.split_text(text):
+            chunks.append({
+                "text": chunk_text,
+                "pokemon": document["pokemon"],
+                "heading": document["heading"],
+                "path": document["path"]
+            })
+
+    return chunks
 
 def load_embedding_model():
     model = SentenceTransformer(
@@ -44,6 +71,7 @@ def generate_embeddings(chunks, model):
 
     return embeddings
 
+# create or get a collection in ChromaDB
 def initialize_chroma():
     client = chromadb.PersistentClient(
         path=str(CHROMA_DIR)
@@ -90,6 +118,8 @@ def store_chunks(chunks, embeddings, collection):
     )
 
 def run_vectorization(chunks):
+    chunks = chunk_documents(documents)
+
     if not chunks:
         print("No chunks provided.")
         return None
