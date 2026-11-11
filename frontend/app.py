@@ -13,6 +13,7 @@ st.set_page_config(page_title="Field Dex · GottaCatchEmAll",
 fd.apply_style()
 ss = st.session_state
 ss.setdefault("turns", [])
+ss.setdefault("session_id", None)
 ss.setdefault("pending_question", None)
 busy = ss.pending_question is not None
 
@@ -67,15 +68,17 @@ with fd.device():
             st.rerun()
         if st.button("New scan", key="fd-reset", disabled=busy):
             ss.turns = []
+            ss.session_id = None
             st.rerun()
 
 fd.render_footer()
 
 if busy:
     try:
-        answer = ask_api(endpoint, ss.pending_question, top_k)
+        answer = ask_api(endpoint, ss.pending_question, top_k, ss.session_id)
+        ss.session_id = answer.pop("session_id", None) or ss.session_id
     except APIError as exc:
-        answer = {"kind": "fault", "text": str(exc), "sources": []}
+        answer = {"kind": "fault", "text": str(exc), "sources": [], "session_id": ss.session_id}
     ss.turns.append({"question": ss.pending_question, "answer": answer})
     ss.pending_question = None
     st.rerun()
