@@ -2,6 +2,7 @@ from pathlib import Path
 
 import chromadb
 from sentence_transformers import SentenceTransformer
+from functools import lru_cache
 
 
 # Project directories
@@ -14,6 +15,7 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 # Vector database collection
 COLLECTION_NAME = "pokemon_documentation"
 
+@lru_cache(maxsize=1)
 def load_embedding_model():
     model = SentenceTransformer(
         MODEL_NAME,
@@ -44,6 +46,7 @@ def generate_embeddings(chunks, model):
 
     return embeddings
 
+@lru_cache(maxsize=1)
 def initialize_chroma():
     client = chromadb.PersistentClient(
         path=str(CHROMA_DIR)
@@ -109,3 +112,20 @@ def run_vectorization(chunks):
     print(f"Stored {len(chunks)} chunks.")
 
     return collection
+
+def retrieve_chunks(question, top_k=5):
+    model = load_embedding_model()
+
+    question_embedding = model.encode(
+        question,
+        convert_to_numpy=True
+    )
+
+    collection = initialize_chroma()
+
+    results = collection.query(
+        query_embeddings=[question_embedding.tolist()],
+        n_results=top_k
+    )
+
+    return results
