@@ -16,11 +16,15 @@ class LLMUnavailable(Exception):
 _client = ollama.Client(host=config.OLLAMA_HOST, timeout=config.LLM_TIMEOUT)
 
 
-def generate(history: list[dict], question: str) -> str:
+def generate(history: list[dict], question: str, chunks: list[dict]) -> str:
+    context = "\n\n".join(
+        f"[{c['metadata']['pokemon']} - {c['metadata']['heading']}]\n{c['text']}"
+        for c in chunks
+    )
     messages = (
         [{"role": "system", "content": SYSTEM_PROMPT}]
         + history
-        + [{"role": "user", "content": question}]
+        + [{"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}]
     )
     try:
         response = _client.chat(model=config.OLLAMA_MODEL, messages=messages)

@@ -29,7 +29,8 @@ def load_documents():
                 "pokemon": record["name"],
                 "heading": section["heading"],
                 "path": section["path"],
-                "text": section["text"]
+                "text": section["text"],
+                "source_url": record.get("source_url", "")
             })
 
     return documents
@@ -54,7 +55,8 @@ def chunk_documents(documents):
                 "text": chunk_text,
                 "pokemon": document["pokemon"],
                 "heading": document["heading"],
-                "path": document["path"]
+                "path": document["path"],
+                "source_url": document.get("source_url", "")
             })
 
     return chunks
@@ -126,7 +128,8 @@ def store_chunks(chunks, embeddings, collection):
         metadatas.append({
             "pokemon": chunk["pokemon"],
             "heading": chunk["heading"],
-            "path": " > ".join(chunk["path"])
+            "path": " > ".join(chunk["path"]),
+            "source_url": chunk.get("source_url", "")
         })
 
     collection.upsert(

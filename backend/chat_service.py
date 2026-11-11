@@ -1,8 +1,38 @@
 import uuid
 
+from vectorization.vectorization import retrieve_chunks
+
 from . import memory, llm
-from .schemas import AskResponse
+from .schemas import AskResponse, Source
 from .pokemon_scope import find_pokemon
+
+
+def _search_query(question: str, history: list[dict], pokemon: dict | None) -> str:
+  """Follow-ups like "what about its moves?" name no Pokémon, so borrow
+  the most recent one from earlier in the conversation."""
+  if not pokemon:
+    for message in reversed(history):
+      if message["role"] == "user":
+        pokemon = find_pokemon(message["content"])
+        if pokemon:
+          break
+  return f"{pokemon['name']}: {question}" if pokemon else question
+
+
+def _to_sources(chunks: list[dict]) -> list[Source]:
+  seen = set()
+  sources = []
+  for chunk in chunks:
+    meta = chunk["metadata"]
+    key = (meta["pokemon"], meta["heading"])
+    if key not in seen:
+      seen.add(key)
+      sources.append(Source(
+        title=meta["pokemon"],
+        section=meta["heading"],
+        url=meta.get("source_url", ""),
+      ))
+  return sources
 
 
 def answer(session_id: str | None, question: str, top_k: int) -> AskResponse:
@@ -11,6 +41,7 @@ def answer(session_id: str | None, question: str, top_k: int) -> AskResponse:
   history = memory.get(session_id)
 
   pokemon = find_pokemon(question)
+  sources = []
 
   if pokemon and pokemon["dex"] > 151:
       name = pokemon["name"].title()
@@ -20,9 +51,11 @@ def answer(session_id: str | None, question: str, top_k: int) -> AskResponse:
           f"I only cover the original 151 Pokémon!"
       )
   else:
-      text = llm.generate(history, question)
+      chunks = retrieve_chunks(_search_query(question, history, pokemon), top_k)
+      text = llm.generate(history, question, chunks)
+      sources = _to_sources(chunks)
 
   memory.append(session_id, "user", question)
   memory.append(session_id, "assistant", text)
 
-  return AskResponse(kind="answer", text=text, sources=[], session_id=session_id)
+  return AskResponse(kind="answer", text=text, sources=sources, session_id=session_id)
