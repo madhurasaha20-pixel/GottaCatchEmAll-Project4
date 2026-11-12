@@ -7,6 +7,17 @@ from .schemas import AskResponse, Source
 from .pokemon_scope import find_pokemon
 
 
+# Cosine distance. Measured best-chunk distances: in-scope questions 0.17-0.45,
+# off-topic 0.64-0.89, so 0.55 sits in the gap.
+MAX_DISTANCE = 0.55
+
+REFUSAL = (
+  "That's outside what I can help with. I only answer questions about "
+  "Pokémon, using the records loaded into this Dex. Try asking about a "
+  "species, an evolution or a Pokémon's biology."
+)
+
+
 def _search_query(question: str, history: list[dict], pokemon: dict | None) -> str:
   """Follow-ups like "what about its moves?" name no Pokémon, so borrow
   the most recent one from earlier in the conversation."""
@@ -52,6 +63,9 @@ def answer(session_id: str | None, question: str, top_k: int) -> AskResponse:
       )
   else:
       chunks = retrieve_chunks(_search_query(question, history, pokemon), top_k)
+      chunks = [c for c in chunks if c["distance"] <= MAX_DISTANCE]
+      if not chunks:
+        return AskResponse(kind="refusal", text=REFUSAL, sources=[], session_id=session_id)
       text = llm.generate(history, question, chunks)
       sources = _to_sources(chunks)
 
