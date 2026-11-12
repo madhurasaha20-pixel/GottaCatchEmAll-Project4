@@ -11,13 +11,13 @@ class APIError(Exception):
     """A user-readable connection or response error."""
 
 
-def ask_api(endpoint: str, question: str, top_k: int) -> dict:
+def ask_api(endpoint: str, question: str, top_k: int, session_id: str | None = None) -> dict:
     """POST the proposed frontend contract; see frontend/README.md."""
     if urlsplit(endpoint).scheme not in {"http", "https"} or not urlsplit(endpoint).netloc:
         raise APIError("Enter a complete HTTP or HTTPS API endpoint in Connection settings.")
     request = Request(
         endpoint,
-        data=json.dumps({"question": question, "top_k": top_k}).encode("utf-8"),
+        data=json.dumps({"question": question, "top_k": top_k, "session_id": session_id}).encode("utf-8"),
         headers={"Content-Type": "application/json", "Accept": "application/json"},
         method="POST",
     )
@@ -49,4 +49,4 @@ def ask_api(endpoint: str, question: str, top_k: int) -> dict:
         if urlsplit(source.get("url", "")).scheme not in {"http", "https"}:
             source.pop("url", None)
         safe_sources.append(source)
-    return {"text": result["text"], "kind": result.get("kind", "answer"), "sources": safe_sources}
+    return {"text": result["text"], "kind": result.get("kind", "answer"), "sources": safe_sources, "session_id": result.get("session_id")}

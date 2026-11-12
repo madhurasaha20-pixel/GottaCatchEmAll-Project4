@@ -2,6 +2,8 @@ from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
 from sentence_transformers import SentenceTransformer
+from functools import lru_cache
+import json
 
 
 # Project directories
@@ -13,6 +15,25 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 
 # Vector database collection
 COLLECTION_NAME = "pokemon_documentation"
+
+def load_documents():
+    raw_dir = BASE_DIR / "data" / "raw"
+    documents = []
+
+    for file_path in sorted(raw_dir.glob("*.json")):
+        with file_path.open(encoding="utf-8") as file:
+            record = json.load(file)
+
+        for section in record.get("sections", []):
+            documents.append({
+                "pokemon": record["name"],
+                "heading": section["heading"],
+                "path": section["path"],
+                "text": section["text"],
+                "source_url": record.get("source_url", "")
+            })
+
+    return documents
 
 # Chunking configuration
 def chunk_documents(documents):
@@ -34,11 +55,13 @@ def chunk_documents(documents):
                 "text": chunk_text,
                 "pokemon": document["pokemon"],
                 "heading": document["heading"],
-                "path": document["path"]
+                "path": document["path"],
+                "source_url": document.get("source_url", "")
             })
 
     return chunks
 
+@lru_cache(maxsize=1)
 def load_embedding_model():
     model = SentenceTransformer(
         MODEL_NAME,
@@ -105,7 +128,8 @@ def store_chunks(chunks, embeddings, collection):
         metadatas.append({
             "pokemon": chunk["pokemon"],
             "heading": chunk["heading"],
-            "path": " > ".join(chunk["path"])
+            "path": " > ".join(chunk["path"]),
+            "source_url": chunk.get("source_url", "")
         })
 
     collection.upsert(
@@ -114,6 +138,38 @@ def store_chunks(chunks, embeddings, collection):
         embeddings=embeddings.tolist(),
         metadatas=metadatas
     )
+
+def retrieve_chunks(question, top_k=5):
+    print("Loading embedding model...")
+    model = load_embedding_model()
+
+    print("Embedding question...")
+    question_embedding = model.encode(
+        question,
+        convert_to_numpy=True
+    )
+
+    print("Searching ChromaDB...")
+    collection = initialize_chroma()
+
+    results = collection.query(
+        query_embeddings=[
+            question_embedding.tolist()
+        ],
+        n_results=top_k
+    )
+
+    retrieved_chunks = []
+
+    for index in range(len(results["ids"][0])):
+        retrieved_chunks.append({
+            "id": results["ids"][0][index],
+            "text": results["documents"][0][index],
+            "metadata": results["metadatas"][0][index],
+            "distance": results["distances"][0][index]
+        })
+
+    return retrieved_chunks
 
 def run_vectorization(documents):
     chunks = chunk_documents(documents)
@@ -137,3 +193,7 @@ def run_vectorization(documents):
     print(f"Stored {len(chunks)} chunks.")
 
     return collection
+
+if __name__ == "__main__":
+    documents = load_documents()
+    run_vectorization(documents)
